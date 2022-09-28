@@ -14,7 +14,14 @@
     <color name="grey">#373737</color>
     <color name="light_grey">#737373</color>
     <color name="dark_grey">#171717</color>
-    <color name="orange">#ff5700</color>
+    <color name="orange">#F8560C</color>
     <color name="dark_orange">#AAff5700</color>
     <color name="transparent_orange">#B3FF5700</color>
+
+    <color name="grey_100">#FBFBFB</color>
+    <color name="grey_300">#E8E8E8</color>
+    <color name="grey_500">#ABABAB</color>
+    <color name="grey_600">#818181</color>
+    <color name="grey_700">#5B5B5B</color>
+    <color name="grey_800">#363636</color>
 </resources>

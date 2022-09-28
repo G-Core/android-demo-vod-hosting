@@ -1,12 +1,13 @@
 package com.example.gcore_vod_demo.data.remote
 
+import android.app.Application
 import android.content.Context
-import androidx.fragment.app.FragmentActivity
 import com.example.gcore_vod_demo.GCoreApp
-import com.example.gcore_vod_demo.data.remote.auth.AuthRequestBody
-import com.example.gcore_vod_demo.data.remote.auth.AuthResponse
-import com.example.gcore_vod_demo.data.remote.refresh_token.RefreshRequestBody
-import com.example.gcore_vod_demo.data.remote.video.RequestBodyForCreatingVideo
+import com.example.gcore_vod_demo.data.remote.account.AccountDetailsResponse
+import com.example.gcore_vod_demo.data.remote.account.auth.AuthRequestBody
+import com.example.gcore_vod_demo.data.remote.account.auth.AuthResponse
+import com.example.gcore_vod_demo.data.remote.account.refresh_token.RefreshRequestBody
+import com.example.gcore_vod_demo.data.remote.video.PostVideoRequestBody
 import com.example.gcore_vod_demo.data.remote.video.UploadVideoResponse
 import com.example.gcore_vod_demo.data.remote.video.VideoItemResponse
 import gcore_vod_demo.R
@@ -21,91 +22,120 @@ object RemoteAccessManager {
     const val ACCESS_TOKEN_KEY = "accessToken"
     const val REFRESH_TOKEN_KEY = "refreshToken"
 
-    private fun getAccessToken(fragmentActivity: FragmentActivity): String {
-        return fragmentActivity.getSharedPreferences(
-            fragmentActivity.getString(R.string.app_name),
+    private fun getAccessToken(app: Application): String {
+        return app.getSharedPreferences(
+            app.getString(R.string.app_name),
             Context.MODE_PRIVATE
         ).getString(ACCESS_TOKEN_KEY, "") ?: ""
     }
 
-    fun isAuth(fragmentActivity: FragmentActivity) = getAccessToken(fragmentActivity).isNotEmpty()
+    fun updateTokens(app: Application, authResponse: AuthResponse) {
+        app.getSharedPreferences(
+            app.getString(R.string.app_name),
+            Context.MODE_PRIVATE
+        )
+            .edit()
+            .putString(ACCESS_TOKEN_KEY, authResponse.accessToken)
+            .putString(REFRESH_TOKEN_KEY, authResponse.refreshAccessToken)
+            .apply()
+    }
+
+    fun isAuth(app: Application) = getAccessToken(app).isNotEmpty()
 
     fun auth(
-        fragmentActivity: FragmentActivity,
+        app: Application,
         requestBody: AuthRequestBody
     ): Single<AuthResponse> {
 
-        return (fragmentActivity.application as GCoreApp).authApi
+        return (app as GCoreApp).authApi
             .performLogin(requestBody)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    fun auth(fragmentActivity: FragmentActivity): Single<AuthResponse> {
+    fun auth(app: Application): Single<AuthResponse> {
 
-        val eMail = fragmentActivity.getSharedPreferences(
-            fragmentActivity.getString(R.string.app_name),
+        val eMail = app.getSharedPreferences(
+            app.getString(R.string.app_name),
             Context.MODE_PRIVATE
         ).getString(EMAIL_KEY, "") ?: ""
 
-        val password = fragmentActivity.getSharedPreferences(
-            fragmentActivity.getString(R.string.app_name),
+        val password = app.getSharedPreferences(
+            app.getString(R.string.app_name),
             Context.MODE_PRIVATE
         ).getString(PASSWORD_KEY, "") ?: ""
 
         val requestBody = AuthRequestBody(eMail = eMail, password = password)
 
-        return (fragmentActivity.application as GCoreApp).authApi
+        return (app as GCoreApp).authApi
             .performLogin(requestBody)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    fun refreshToken(fragmentActivity: FragmentActivity): Single<AuthResponse> {
-        val refreshToken = fragmentActivity.getSharedPreferences(
-            fragmentActivity.getString(R.string.app_name),
+    fun signOut(app: Application) {
+        app.getSharedPreferences(
+            app.getString(R.string.app_name),
+            Context.MODE_PRIVATE
+        )
+            .edit()
+            .clear()
+            .apply()
+    }
+
+    fun refreshToken(app: Application): Single<AuthResponse> {
+        val refreshToken = app.getSharedPreferences(
+            app.getString(R.string.app_name),
             Context.MODE_PRIVATE
         ).getString(REFRESH_TOKEN_KEY, "") ?: ""
 
         val requestBody = RefreshRequestBody(refreshToken)
 
-        return (fragmentActivity.application as GCoreApp).refreshTokenApi
+        return (app as GCoreApp).refreshTokenApi
             .refreshToken(requestBody)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    fun loadVideoItems(
-        fragmentActivity: FragmentActivity,
-        page: Int
-    ): Single<List<VideoItemResponse>> {
-        val accessToken = getAccessToken(fragmentActivity)
+    fun getAccountDetails(app: Application): Single<AccountDetailsResponse> {
+        val accessToken = getAccessToken(app)
 
-        return (fragmentActivity.application as GCoreApp).videoApi
-            .getVideoItems("Bearer $accessToken", page = page)
+        return (app as GCoreApp).accountApi
+            .getAccountDetails("Bearer $accessToken")
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    fun createVideo(
-        fragmentActivity: FragmentActivity,
-        requestBody: RequestBodyForCreatingVideo
-    ): Single<VideoItemResponse> {
-        val accessToken = getAccessToken(fragmentActivity)
+    fun loadVideoItems(
+        app: Application,
+    ): Single<List<VideoItemResponse>> {
+        val accessToken = getAccessToken(app)
 
-        return (fragmentActivity.application as GCoreApp).videoApi
-            .createVideo("Bearer $accessToken", requestBody)
+        return (app as GCoreApp).videoApi
+            .getVideoItems("Bearer $accessToken")
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    fun postVideo(
+        app: Application,
+        requestBody: PostVideoRequestBody
+    ): Single<VideoItemResponse> {
+        val accessToken = getAccessToken(app)
+
+        return (app as GCoreApp).videoApi
+            .postVideo("Bearer $accessToken", requestBody)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
     fun getUrlAndTokenToUploadVideo(
-        fragmentActivity: FragmentActivity,
+        app: Application,
         videoId: Int
     ): Single<UploadVideoResponse> {
-        val accessToken = getAccessToken(fragmentActivity)
+        val accessToken = getAccessToken(app)
 
-        return (fragmentActivity.application as GCoreApp).videoApi
+        return (app as GCoreApp).videoApi
             .getURLandTokenToUploadVideo("Bearer $accessToken", videoId)
             .subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
