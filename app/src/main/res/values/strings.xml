@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">G-CoreVideoDemo</string>
+    <string name="activity_main_toolbar_title">Server videos</string>
+
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="enter">Enter</string>
+    <string name="empty_list">The list is empty</string>
+
+    <string name="etEmail_is_empty">Enter eMail</string>
+    <string name="etPassword_is_empty">Enter password</string>
+    <string name="etEmail_is_incorrect">Please enter a valid email</string>
+    <string name="etPassword_is_incorrect">Please enter correct password</string>
+
+    <string name="logged_success">You are successfully logged in</string>
+    <string name="logged_fail">Invalid email or password</string>
+
+    <string name="no_internet">No Internet</string>
+    <string name="check_internet">Check your network connection</string>
+    <string name="connection_restored">Connection restored</string>
+    <string name="video_not_sent">Video not sent, please check your network connection</string>
+    <string name="status_is_ready" translatable="false">ready</string>
+
+    <string name="camera_is_denied">Video recording function is not available because there are no permission</string>
+    <string name="upload_video">Sending Video to G-Core Server</string>
+
+    <string name="upload_video_dialog_title">Upload the captured video to the server?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="video_sent_to_server">The video sent to the server</string>
+
+    <string name="size_in_MB" translatable="false">%1.2f MB</string>
+    <string name="id" translatable="false">id: %1d</string>
+</resources>
