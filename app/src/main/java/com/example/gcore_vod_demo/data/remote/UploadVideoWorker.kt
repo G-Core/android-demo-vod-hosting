@@ -8,15 +8,14 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.work.ForegroundInfo
-import androidx.work.WorkManager
-import androidx.work.Worker
-import androidx.work.WorkerParameters
+import androidx.work.*
 import gcore_vod_demo.R
 import io.tus.android.client.TusAndroidUpload
 import io.tus.android.client.TusPreferencesURLStore
+import io.tus.java.client.ProtocolException
 import io.tus.java.client.TusClient
 import io.tus.java.client.TusExecutor
+import java.io.IOException
 import java.net.URL
 
 class UploadVideoWorker(
@@ -29,45 +28,60 @@ class UploadVideoWorker(
 
         return try {
             val tusClient = getTusClient()
-            val videoFile = getVideoFile()
+            val videoUpload = getVideoUpload()
 
-            uploadVideo(tusClient, videoFile) { currentProgress: Int ->
+            uploadVideo(tusClient, videoUpload) { uploadedBytes: Long ->
                 setForegroundAsync(
                     createForegroundInfo(
                         notificationId,
-                        videoFile.size.toInt(),
-                        currentProgress
+                        videoUpload.size.toInt(),
+                        uploadedBytes.toInt()
+                    )
+                )
+
+                val uploadedPercent = (uploadedBytes * 100 / videoUpload.size).toInt()
+                setProgressAsync(
+                    workDataOf(
+                        UPLOADED_PERCENT to uploadedPercent,
                     )
                 )
             }
             Result.success()
+
         } catch (throwable: Throwable) {
+            throwable.printStackTrace()
             Result.failure()
         }
     }
 
     private fun uploadVideo(
         tusClient: TusClient,
-        videoFile: TusAndroidUpload,
-        updateProgress: (progress: Int) -> Unit
+        videoUpload: TusAndroidUpload,
+        updateProgress: (uploadedBytes: Long) -> Unit
     ) {
         val executor = object : TusExecutor() {
             override fun makeAttempt() {
-                val uploader = tusClient.resumeOrCreateUpload(videoFile).apply {
-                    chunkSize = uploadedChunkSizeInBytes
-                }
-
-                val progressChunkSize = videoFile.size * stepDisplayedProgressInPercents / 100
-                var displayedOffset = progressChunkSize
-
-                 do {
-                    if (uploader.offset > displayedOffset) {
-                        displayedOffset += progressChunkSize
-                        updateProgress(uploader.offset.toInt())
+                try {
+                    val uploader = tusClient.resumeOrCreateUpload(videoUpload).apply {
+                        chunkSize = uploadedChunkSizeInBytes
                     }
-                } while(!isStopped && (uploader.uploadChunk() > -1))
 
-                uploader.finish()
+                    val progressChunkSize = videoUpload.size * stepDisplayedProgressInPercents / 100
+                    var displayedOffset = progressChunkSize
+
+                    do {
+                        if (uploader.offset > displayedOffset) {
+                            displayedOffset += progressChunkSize
+                            updateProgress(uploader.offset)
+                        }
+                    } while (!isStopped && (uploader.uploadChunk() > -1))
+
+                    uploader.finish()
+                } catch (e: ProtocolException) {
+                    throw ProtocolException(e.message)
+                } catch (e: IOException) {
+                    throw IOException(e.message)
+                }
             }
         }
         executor.makeAttempts()
@@ -85,7 +99,7 @@ class UploadVideoWorker(
         }
     }
 
-    private fun getVideoFile(): TusAndroidUpload {
+    private fun getVideoUpload(): TusAndroidUpload {
         val videoName = inputData.getString(VIDEO_NAME) ?: ""
         val clientId = inputData.getInt(CLIENT_ID, 0)
         val videoId = inputData.getInt(VIDEO_ID, 0)
@@ -125,7 +139,7 @@ class UploadVideoWorker(
         val contentText = context.getString(R.string.upload_video)
 
         return NotificationCompat.Builder(context, UPLOAD_VIDEO_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_app)
             .setContentTitle(contentTitle)
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -162,10 +176,11 @@ class UploadVideoWorker(
         private const val stepDisplayedProgressInPercents = 5
 
         const val UPLOAD_VIDEO_URL = "uploadVideoUrl"
-        const val VIDEO_NAME = "videoName"
+        const val VIDEO_NAME = "name"
         const val CLIENT_ID = "clientId"
         const val VIDEO_TOKEN = "videoToken"
-        const val VIDEO_ID = "videoId"
+        const val VIDEO_ID = "id"
         const val VIDEO_LOCAL_URI = "videoLocalUri"
+        const val UPLOADED_PERCENT = "uploadedPercent"
     }
 }

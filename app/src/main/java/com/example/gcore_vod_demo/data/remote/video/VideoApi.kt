@@ -13,20 +13,20 @@ interface VideoApi {
      * *     2 — viewable (video is still being processed but can be viewed)
      * *     3 — ready (video is ready to be viewed)
      */
-    @GET("./vp/api/videos")
+    @GET("./streaming/videos")
     fun getVideoItems(
         @Header("Authorization") accessToken: String,
-        @Query("page") page: Int,
+        @Query("page") page: Int = 1,
         @Query("q[status_eq]") status: Int = 3
     ): Single<List<VideoItemResponse>>
 
-    @POST("./vp/api/videos")
-    fun createVideo(
+    @POST("./streaming/videos")
+    fun postVideo(
         @Header("Authorization") accessToken: String,
-        @Body body: RequestBodyForCreatingVideo
+        @Body body: PostVideoRequestBody
     ): Single<VideoItemResponse>
 
-    @GET("/vp/api/videos/{video_id}/upload")
+    @GET("/streaming/videos/{video_id}/upload")
     fun getURLandTokenToUploadVideo(
         @Header("Authorization") accessToken: String,
         @Path("video_id") videoId: Int

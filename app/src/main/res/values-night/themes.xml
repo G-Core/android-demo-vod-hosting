@@ -10,7 +10,7 @@
         <item name="colorSecondaryVariant">@color/dark_orange</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor" >?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
 
@@ -20,8 +20,8 @@
         <item name="android:textStyle">normal</item>
     </style>
 
-    <style name="MyTextInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/text_input_box_stroke</item>
+    <style name="myTextInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/til_color_selector</item>
         <item name="endIconTint">@color/toggle_password_selector</item>
     </style>
 
