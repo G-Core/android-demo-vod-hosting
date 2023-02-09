@@ -1,4 +1,7 @@
-# G-Core VOD Demo
+# Fully Working Video App for iOS: Video Player, Smooth Scrolling, Loading
+
+# Demo
+<img src="/gif/android_Vod_demo_github.gif"/>
 
 # Introduction
 Services that provide the ability to publish and play short videos are at the peak of popularity. One of their main features is an endless tape of video content, when scrolling through it, playback starts instantly.
